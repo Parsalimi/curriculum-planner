@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Curriculum · Curriculum Planner{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">CURRICULUM</span>
+        <h1>{{ curriculum.name }}</h1>
+        <p class="muted">{{ curriculum.degree }} · {{ curriculum.version }}</p>
+    </div>
+    <a class="button primary" href="{% url 'courses' %}">All courses</a>
+</div>
+
+{% for category in categories %}
+<section class="course-section">
+    <div class="section-heading">
+        <div><h2>{{ category.label }}</h2><p class="muted">{{ category.courses|length }} courses</p></div>
+    </div>
+    <div class="course-list">
+        {% for row in category.courses %}
+        <a class="course-row" href="{% url 'course_detail' row.item.id %}">
+            <div class="course-code">{{ row.item.course.code }}</div>
+            <div class="course-main">
+                <strong>{{ row.item.course.name }}</strong>
+                <span>{{ row.item.course.credits }} credits · recommended semester {{ row.item.recommended_semester }}</span>
+            </div>
+            {% if row.item.is_mandatory %}<span class="pill mandatory">Mandatory</span>{% endif %}
+            {% if row.progress %}
+                <span class="pill {{ row.progress.status|lower }}">{{ row.progress.get_status_display }}</span>
+            {% else %}
+                <span class="pill neutral">Not tracked</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% empty %}
+<div class="empty card">No courses have been added to this curriculum yet.</div>
+{% endfor %}
+{% endblock %}

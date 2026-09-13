@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <span class="eyebrow">پیشرفت تحصیلی، بدون جدول پیچیده</span>
+        <h1>همیشه بدانید در مسیر تحصیلی خود کجا ایستاده‌اید.</h1>
+        <p>
+            دروس خود را به‌راحتی دنبال کنید، وضعیت هر درس را ثبت کنید و
+            پیشرفت خود را نسبت به نیازهای برنامه درسی در یک نگاه ببینید.
+        </p>
+        <div class="hero-actions">
+            <a class="button primary" href="{% url 'register' %}">ثبت نام</a>
+            <a class="button secondary" href="{% url 'login' %}">ورود به حساب‌کاربری</a>
+        </div>
+    </div>
+    <div class="hero-card">
+        <div class="mini-label">رشته کامپیوتر</div>
+        <div class="hero-number">73%</div>
+        <div class="muted">پیشرفت کلی</div>
+        <div class="progress"><span style="width:73%"></span></div>
+        <div class="hero-stats">
+            <div><strong>102</strong><span>واحد گذرانده</span></div>
+            <div><strong>38</strong><span>واحد باقیمانده</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="feature-grid">
+    <article><div class="icon">✓</div><h3>پیگیری درس‌ها</h3><p>وضعیت هر درس را به‌صورت سریع و مستقیم به‌روزرسانی کنید.</p></article>
+    <article><div class="icon">◎</div><h3>درک نیازمندی‌ها</h3><p>گروه‌های درسی و الزامات هر بخش را به‌صورت واضح ببینید.</p></article>
+    <article><div class="icon">↗</div><h3>مشاهده پیشرفت</h3><p>پیشرفت کلی تحصیلی خود را با یک نگاه ارزیابی کنید.</p></article>
+</section>
+{% endblock %}

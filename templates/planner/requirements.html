@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Requirements · Curriculum Planner{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><span class="eyebrow">DEGREE RULES</span><h1>Requirements</h1><p class="muted">{{ curriculum.name }} · {{ curriculum.version }}</p></div>
+</div>
+
+<div class="requirements-stack">
+{% for item in groups %}
+<article class="card requirement-full">
+    <div class="requirement-title">
+        <div><h2>{{ item.group.name }}</h2><span class="pill neutral">{{ item.group.get_type_display }}</span></div>
+        <div class="requirement-result"><strong>{{ item.passed_count }}</strong><span>passed</span><strong>{{ item.passed_credits }}</strong><span>credits</span></div>
+    </div>
+    <div class="requirement-courses">
+        {% for course in item.items %}
+        <a href="{% url 'course_detail' course.rc.curriculum_course.id %}" class="requirement-course">
+            <span class="course-code">{{ course.rc.curriculum_course.course.code }}</span>
+            <span><strong>{{ course.rc.curriculum_course.course.name }}</strong><small>{{ course.rc.curriculum_course.course.credits }} credits</small></span>
+            {% if course.tracking and course.tracking.status == "PASSED" %}
+                <span class="pill passed">Passed</span>
+            {% elif course.tracking %}
+                <span class="pill {{ course.tracking.status|lower }}">{{ course.tracking.get_status_display }}</span>
+            {% else %}
+                <span class="pill neutral">Not started</span>
+            {% endif %}
+        </a>
+        {% empty %}
+        <p class="muted">No courses configured for this requirement.</p>
+        {% endfor %}
+    </div>
+</article>
+{% empty %}
+<div class="empty card">No requirement groups have been configured yet.</div>
+{% endfor %}
+</div>
+{% endblock %}

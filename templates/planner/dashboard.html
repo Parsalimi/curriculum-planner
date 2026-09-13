@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}داشبورد · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">وضعیت تحصیلی</span>
+        <h1>{{ curriculum.name }}</h1>
+        <p class="muted">{{ curriculum.degree }} · {{ curriculum.version }}</p>
+    </div>
+</div>
+
+<section class="dashboard-grid">
+    <div class="card progress-card">
+        <div class="card-heading">
+            <span>پیشرفت کلی</span>
+            <strong>{{ overall_progress }}%</strong>
+        </div>
+        <div class="progress large"><span style="width:{{ overall_progress }}%"></span></div>
+        <div class="metric-row">
+            <div><strong>{{ completed_units }}</strong><span>واحد گذرانده</span></div>
+            <div><strong>{{ remaining_units }}</strong><span>واحد باقیمانده</span></div>
+            <div><strong>{{ total_required_units }}</strong><span>واحد مورد نیاز</span></div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <span>درس‌های گذرانده</span>
+        <strong>{{ passed_courses_count }}</strong>
+        <small>درس</small>
+    </div>
+
+    <div class="stat-card">
+        <span>گروه‌های تکمیل‌شده</span>
+        <strong>{{ completed_groups }}</strong>
+        <small>گروه</small>
+    </div>
+</section>
+
+<div class="quick-actions">
+    <a class="button primary" href="{% url 'status' %}">مشاهده وضعیت</a>
+</div>
+{% endblock %}

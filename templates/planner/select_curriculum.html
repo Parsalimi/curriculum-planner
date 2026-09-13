@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}انتخاب برنامه درسی · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="page-header compact">
+    <span class="eyebrow">تنظیمات</span>
+    <h1>انتخاب برنامه درسی</h1>
+    <p class="muted">این انتخاب تعیین می‌کند کدام درس‌ها و گروه‌های درسی برای شما نمایش داده شوند.</p>
+</div>
+<div class="card narrow">
+    <form method="post" class="stack-form">
+        {% csrf_token %}
+        <label>برنامه درسی {{ form.curriculum }}</label>
+        <button class="button primary" type="submit">ادامه</button>
+    </form>
+</div>
+{% endblock %}

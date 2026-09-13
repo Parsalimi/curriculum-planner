@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}وضعیت · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">وضعیت تحصیلی</span>
+        <h1>{{ curriculum.name }}</h1>
+        <p class="muted">{{ curriculum.degree }} · {{ curriculum.version }}</p>
+    </div>
+</div>
+
+<section class="dashboard-grid">
+    <div class="card progress-card">
+        <div class="card-heading">
+            <span>پیشرفت کلی</span>
+            <strong id="overall-progress-value">{{ overall_progress }}%</strong>
+        </div>
+        <div class="progress large"><span id="overall-progress-bar" style="width:{{ overall_progress }}%"></span></div>
+        <div class="metric-row">
+            <div><strong id="overall-completed-units">{{ completed_units }}</strong><span>واحد گذرانده</span></div>
+            <div><strong id="overall-required-units">{{ total_required_units }}</strong><span>واحد مورد نیاز</span></div>
+            <div><strong id="overall-passed-courses">{{ passed_courses_count }}</strong><span>درس گذرانده</span></div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <span>گروه‌های تکمیل‌شده</span>
+        <strong id="overall-completed-groups">{{ completed_groups }}</strong>
+        <small>گروه</small>
+    </div>
+
+    <div class="stat-card">
+        <span>واحد باقیمانده</span>
+        <strong id="overall-remaining-units">{{ remaining_units }}</strong>
+        <small>واحد</small>
+    </div>
+</section>
+
+<section class="section-heading">
+    <div>
+        <h2>گروه‌های درسی</h2>
+    </div>
+</section>
+
+<div class="requirement-stack">
+{% for item in groups %}
+    <article class="card requirement-card {% if item.is_complete %}requirement-card-complete{% endif %}" data-group-id="{{ item.group.id }}">
+        <div class="requirement-title">
+            <div>
+                <h2>{{ item.group.name }}</h2>
+            </div>
+            <div class="requirement-result">
+                <strong>{{ item.completed_units }}</strong>
+                <span>/</span>
+                <strong>{{ item.required_units }}</strong>
+                <span>واحد</span>
+            </div>
+        </div>
+
+        <div class="metric-row compact-row">
+            <div>
+                <strong class="group-progress-text">{{ item.progress }}%</strong>
+                <span>پیشرفت</span>
+            </div>
+            <div>
+                <strong class="group-passed-courses">{{ item.passed_courses_count }}</strong>
+                <span>درس گذرانده‌شده</span>
+            </div>
+        </div>
+
+        <div class="progress"><span class="group-progress-bar" style="width:{{ item.progress }}%"></span></div>
+
+        <div class="accordion-toggle" data-target="group-{{ item.group.id }}">
+            <button class="accordion-button" type="button" aria-expanded="false">
+                <span>نمایش دروس</span>
+                <span class="accordion-icon">▾</span>
+            </button>
+        </div>
+
+        <div class="accordion-content" id="group-{{ item.group.id }}" hidden>
+            <div class="course-list">
+                {% for course in item.courses %}
+                <label class="course-toggle-row {% if course.passed %}is-passed{% endif %}">
+                    <input
+                        type="checkbox"
+                        data-course-id="{{ course.curriculum_course_id }}"
+                        {% if course.passed %}checked{% endif %}
+                    >
+                    <span class="course-toggle-main">
+                        <span class="course-toggle-name">{{ course.name }}</span>
+                        <span class="course-toggle-meta">{{ course.credits }} واحد</span>
+                    </span>
+                </label>
+                {% empty %}
+                <p class="muted">هیچ درسی برای این گروه ثبت نشده است.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </article>
+{% empty %}
+    <div class="empty card">هیچ گروه درسی برای این برنامه درسی تعریف نشده است.</div>
+{% endfor %}
+</div>
+
+<div id="status-toast" class="status-toast" aria-live="polite"></div>
+
+<script>
+    (function () {
+        const toast = document.getElementById('status-toast');
+
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.classList.toggle('error', isError);
+            toast.classList.add('visible');
+            clearTimeout(showToast.timeoutId);
+            showToast.timeoutId = setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2600);
+        }
+
+        function updateGroupCard(groupId, data) {
+            const card = document.querySelector('[data-group-id="' + groupId + '"]');
+            if (!card) return;
+
+            const progressBar = card.querySelector('.group-progress-bar');
+            const progressText = card.querySelector('.group-progress-text');
+            const passedCount = card.querySelector('.group-passed-courses');
+            const resultText = card.querySelector('.requirement-result');
+
+            if (progressBar) {
+                progressBar.style.width = data.progress + '%';
+            }
+            if (progressText) {
+                progressText.textContent = data.progress + '%';
+            }
+            if (passedCount) {
+                passedCount.textContent = data.passed_courses_count;
+            }
+            if (resultText) {
+                resultText.innerHTML = '<strong>' + data.completed_units + '</strong><span>/</span><strong>' + data.required_units + '</strong><span>واحد</span>';
+            }
+
+            card.classList.toggle('requirement-card-complete', data.is_complete);
+        }
+
+        document.querySelectorAll('input[type="checkbox"][data-course-id]').forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                const courseId = Number(this.dataset.courseId);
+                const originalState = this.checked;
+                const row = this.closest('.course-toggle-row');
+                row.classList.toggle('is-passed', this.checked);
+
+                fetch('{% url "toggle_course_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        curriculum_course_id: courseId,
+                        passed: this.checked
+                    })
+                })
+                .then(async (response) => {
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        this.checked = !this.checked;
+                        row.classList.toggle('is-passed', this.checked);
+                        showToast(data.message || 'ذخیره تغییرات انجام نشد. دوباره تلاش کنید.', true);
+                        return;
+                    }
+
+                    showToast('تغییرات با موفقیت ذخیره شد.', false);
+                    const card = this.closest('.card');
+                    const groupId = card.dataset.groupId;
+                    updateGroupCard(groupId, data.group);
+
+                    const overallProgressValue = document.getElementById('overall-progress-value');
+                    const overallProgressBar = document.getElementById('overall-progress-bar');
+                    const overallCompletedUnits = document.getElementById('overall-completed-units');
+                    const overallRequiredUnits = document.getElementById('overall-required-units');
+                    const overallPassedCourses = document.getElementById('overall-passed-courses');
+                    const overallCompletedGroups = document.getElementById('overall-completed-groups');
+                    const overallRemainingUnits = document.getElementById('overall-remaining-units');
+
+                    if (overallProgressValue) overallProgressValue.textContent = data.overall.progress + '%';
+                    if (overallProgressBar) overallProgressBar.style.width = data.overall.progress + '%';
+                    if (overallCompletedUnits) overallCompletedUnits.textContent = data.overall.completed_units;
+                    if (overallRequiredUnits) overallRequiredUnits.textContent = data.overall.required_units;
+                    if (overallPassedCourses) overallPassedCourses.textContent = data.overall.passed_courses_count;
+                    if (overallCompletedGroups) overallCompletedGroups.textContent = data.overall.completed_groups;
+                    if (overallRemainingUnits) overallRemainingUnits.textContent = Math.max(data.overall.required_units - data.overall.completed_units, 0);
+                })
+                .catch(() => {
+                    this.checked = !this.checked;
+                    row.classList.toggle('is-passed', this.checked);
+                    showToast('ذخیره تغییرات انجام نشد. دوباره تلاش کنید.', true);
+                });
+            });
+        });
+
+        document.querySelectorAll('.accordion-button').forEach((button) => {
+            button.addEventListener('click', function () {
+                const content = this.closest('.accordion-toggle').nextElementSibling;
+                const expanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', String(!expanded));
+                content.hidden = expanded;
+                this.querySelector('.accordion-icon').textContent = expanded ? '▾' : '▴';
+            });
+        });
+    })();
+</script>
+{% endblock %}

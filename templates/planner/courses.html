@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Courses · Curriculum Planner{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><span class="eyebrow">COURSE CATALOG</span><h1>Courses</h1><p class="muted">{{ curriculum.name }} · {{ curriculum.version }}</p></div>
+</div>
+
+<form class="filter-bar" method="get">
+    <input class="input" name="q" value="{{ query }}" placeholder="Search by code or name...">
+    <select class="input" name="category">
+        <option value="">All categories</option>
+        {% for key, label in categories %}<option value="{{ key }}" {% if selected_category == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select class="input" name="status">
+        <option value="">All statuses</option>
+        {% for key, label in statuses %}<option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="button primary" type="submit">Filter</button>
+</form>
+
+<div class="course-list">
+{% for row in rows %}
+    <a class="course-row" href="{% url 'course_detail' row.item.id %}">
+        <div class="course-code">{{ row.item.course.code }}</div>
+        <div class="course-main">
+            <strong>{{ row.item.course.name }}</strong>
+            <span>{{ row.item.course.credits }} credits · {{ row.item.get_category_display }}</span>
+        </div>
+        {% if row.item.is_mandatory %}<span class="pill mandatory">Mandatory</span>{% endif %}
+        {% if row.progress %}
+            <span class="pill {{ row.progress.status|lower }}">{{ row.progress.get_status_display }}</span>
+        {% else %}
+            <span class="pill neutral">Not started</span>
+        {% endif %}
+    </a>
+{% empty %}
+    <div class="empty card">No courses match your filters.</div>
+{% endfor %}
+</div>
+{% endblock %}

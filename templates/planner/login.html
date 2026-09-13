@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}ورود · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-card">
+        <span class="eyebrow">خوش آمدید</span>
+        <h1>ورود</h1>
+        <p class="muted">برای ادامه پیگیری وضعیت تحصیلی خود وارد شوید.</p>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <label>نام کاربری {{ form.username }}</label>
+            <label>رمز عبور {{ form.password }}</label>
+            <button class="button primary full" type="submit">ورود</button>
+        </form>
+        <p class="auth-footer">حساب کاربری ندارید؟ <a href="{% url 'register' %}">ثبت نام کنید</a></p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ curriculum_course.course.name }} · Curriculum Planner{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'courses' %}">Courses</a> / {{ curriculum_course.course.code }}</div>
+<div class="detail-header">
+    <div>
+        <span class="course-code big">{{ curriculum_course.course.code }}</span>
+        <h1>{{ curriculum_course.course.name }}</h1>
+        <div class="detail-meta">
+            <span>{{ curriculum_course.course.credits }} credits</span>
+            <span>{{ curriculum_course.get_category_display }}</span>
+            <span>Recommended semester {{ curriculum_course.recommended_semester }}</span>
+        </div>
+    </div>
+    {% if curriculum_course.is_mandatory %}<span class="pill mandatory large-pill">Mandatory</span>{% endif %}
+</div>
+
+<div class="two-column">
+    <section class="card">
+        <h2>About this course</h2>
+        <p class="description">{{ curriculum_course.course.description|default:"No description has been added yet." }}</p>
+        {% if prerequisites %}
+        <h3>Prerequisites</h3>
+        <ul class="link-list">
+            {% for p in prerequisites %}<li><a href="{% url 'courses' %}?q={{ p.prerequisite.code }}">{{ p.prerequisite }}</a></li>{% endfor %}
+        </ul>
+        {% endif %}
+    </section>
+
+    <section class="card tracking-card">
+        <h2>Your status</h2>
+        <form method="post" action="{% url 'update_course_status' curriculum_course.id %}" class="stack-form">
+            {% csrf_token %}
+            <label>Status {{ form.status }}</label>
+            <label>Grade {{ form.grade }}</label>
+            <button class="button primary full" type="submit">Save progress</button>
+        </form>
+        {% if tracking %}<p class="saved-note">Last saved status: <strong>{{ tracking.get_status_display }}</strong></p>{% endif %}
+    </section>
+</div>
+{% endblock %}

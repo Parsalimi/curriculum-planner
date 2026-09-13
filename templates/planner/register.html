@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}ثبت نام · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-card">
+        <span class="eyebrow">شروع کنید</span>
+        <h1>ثبت نام</h1>
+        <p class="muted">پیشرفت تحصیلی شما به حساب کاربری شما متصل می‌شود.</p>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <label>نام کاربری {{ form.username }}</label>
+            <label>ایمیل {{ form.email }}</label>
+            <label>رمز عبور {{ form.password1 }}</label>
+            <label>تایید رمز عبور {{ form.password2 }}</label>
+            {% if form.errors %}<div class="form-errors">{{ form.errors }}</div>{% endif %}
+            <button class="button primary full" type="submit">ثبت نام</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
