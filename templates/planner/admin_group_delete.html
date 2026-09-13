@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}حذف گروه درسی{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">پنل مدیر</span>
+        <h1>حذف گروه درسی</h1>
+    </div>
+</div>
+
+<div class="card narrow">
+    <p>آیا مطمئن هستید که می‌خواهید گروه درسی <strong>{{ group.name }}</strong> را حذف کنید؟</p>
+    <form method="post" class="stack-form">
+        {% csrf_token %}
+        <div class="admin-actions">
+            <button class="button primary" type="submit">حذف</button>
+            <a class="button secondary" href="{% url 'admin_curriculum_detail' curriculum.id %}">انصراف</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

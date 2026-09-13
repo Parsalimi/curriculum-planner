@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -100,6 +101,49 @@ class RequirementGroup(models.Model):
     type = models.CharField(max_length=20, choices=Type.choices)
     required_count = models.PositiveSmallIntegerField(null=True, blank=True)
     required_credits = models.PositiveSmallIntegerField(null=True, blank=True)
+    overflow_to = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="overflowed_from",
+        help_text="Optional requirement group that receives excess completed credits.",
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~Q(id=models.F("overflow_to")),
+                name="requirement_group_cannot_overflow_to_itself",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        if self.overflow_to_id is None:
+            return
+
+        if self.pk and self.overflow_to_id == self.pk:
+            raise ValidationError({"overflow_to": "A requirement group cannot overflow to itself."})
+
+        current = self.overflow_to
+        seen = set()
+        while current is not None:
+            if current.pk in seen:
+                raise ValidationError(
+                    {"overflow_to": "Circular overflow destinations are not allowed."}
+                )
+            seen.add(current.pk)
+            if self.pk and current.pk == self.pk:
+                raise ValidationError(
+                    {"overflow_to": "A requirement group cannot overflow to itself."}
+                )
+            current = current.overflow_to
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.curriculum} - {self.name}"

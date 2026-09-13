@@ -9,7 +9,13 @@
 {% for item in groups %}
 <article class="card requirement-full">
     <div class="requirement-title">
-        <div><h2>{{ item.group.name }}</h2><span class="pill neutral">{{ item.group.get_type_display }}</span></div>
+        <div>
+            <h2>{{ item.group.name }}</h2>
+            <span class="pill neutral">{{ item.group.get_type_display }}</span>
+            {% if item.group.overflow_to %}
+                <span class="pill neutral">overflow → {{ item.group.overflow_to.name }}</span>
+            {% endif %}
+        </div>
         <div class="requirement-result"><strong>{{ item.passed_count }}</strong><span>passed</span><strong>{{ item.passed_credits }}</strong><span>credits</span></div>
     </div>
     <div class="requirement-courses">

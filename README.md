@@ -2,6 +2,14 @@
 
 A Django MVP for managing a university curriculum and tracking a student's course progress.
 
+## 🚧 Project Status
+
+> **Work in Progress**
+
+This project is **not the final version**. I am actively working on it to improve its functionality, design, code quality, and overall user experience.
+
+Some parts may still be incomplete or subject to change as development continues. The current version should be considered an **MVP / development version**, and I plan to continue refining and expanding the project over time.
+
 ## MVP features
 
 - User registration, login and logout
@@ -31,6 +39,7 @@ pip install -r requirements.txt
 
 python manage.py migrate
 python manage.py createsuperuser
+python manage.py seed_cs_curriculum
 python manage.py runserver
 ```
 

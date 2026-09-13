@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}پنل ادمین · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">پنل مدیریت</span>
+        <h1>Curriculum Administration</h1>
+        <p class="muted">مدیریت برنامه‌های درسی، گروه‌های الزامی، و روابط درس‌ها</p>
+    </div>
+</div>
+
+<div class="admin-panel-grid">
+    {% for item in curricula %}
+    <article class="card admin-card">
+        <div class="requirement-title">
+            <div>
+                <h2>{{ item.curriculum.name }}</h2>
+                <span class="pill neutral">{{ item.curriculum.degree }} · {{ item.curriculum.version }}</span>
+            </div>
+            <div class="requirement-result">
+                <strong>{{ item.course_count }}</strong><span>درس</span>
+                <strong>{{ item.group_count }}</strong><span>گروه</span>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>گروه‌های درسی</h3>
+            {% if item.groups %}
+                <ul class="admin-list">
+                    {% for group in item.groups %}
+                    <li>
+                        <strong>{{ group.name }}</strong>
+                        <small>{{ group.get_type_display }}</small>
+                        {% if group.required_credits %}
+                        <small>حداقل {{ group.required_credits }} واحد</small>
+                        {% endif %}
+                        {% if group.overflow_to %}
+                        <small>overflow → {{ group.overflow_to.name }}</small>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="muted">هیچ گروه درسی برای این برنامه تعریف نشده است.</p>
+            {% endif %}
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty card">هیچ برنامه درسی وجود ندارد.</div>
+    {% endfor %}
+</div>
+{% endblock %}

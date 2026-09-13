@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}مدیریت برنامه‌های درسی{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">پنل مدیر</span>
+        <h1>برنامه‌های درسی</h1>
+    </div>
+    <a class="button primary" href="{% url 'admin_curriculum_create' %}">+ ایجاد برنامه درسی</a>
+</div>
+
+<div class="admin-panel-grid">
+    {% for curriculum in curricula %}
+    <article class="card admin-card">
+        <div class="requirement-title">
+            <div>
+                <h2>{{ curriculum.name }}</h2>
+                <span class="pill neutral">{{ curriculum.degree }} · {{ curriculum.version }}</span>
+            </div>
+            <div class="requirement-result">
+                <strong>{{ curriculum.minimum_credits }}</strong><span>واحد</span>
+            </div>
+        </div>
+
+        <div class="admin-actions">
+            <a class="button secondary" href="{% url 'admin_curriculum_detail' curriculum.id %}">مشاهده</a>
+            <a class="button secondary" href="{% url 'admin_curriculum_edit' curriculum.id %}">ویرایش</a>
+            <a class="button secondary danger" href="{% url 'admin_curriculum_delete' curriculum.id %}">حذف</a>
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty card">هیچ برنامه درسی وجود ندارد.</div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}{{ curriculum.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">برنامه درسی</span>
+        <h1>{{ curriculum.name }}</h1>
+        <p class="muted">{{ curriculum.degree }} · {{ curriculum.version }} · {{ curriculum.minimum_credits }} واحد</p>
+    </div>
+    <div class="admin-actions">
+        <a class="button secondary" href="{% url 'admin_curriculum_edit' curriculum.id %}">ویرایش</a>
+        <a class="button secondary danger" href="{% url 'admin_curriculum_delete' curriculum.id %}">حذف</a>
+    </div>
+</div>
+
+<section class="two-column">
+    <div class="card">
+        <h2>گروه‌های درسی</h2>
+        {% if groups %}
+        <div class="admin-list-stack">
+            {% for group in groups %}
+            <div class="assignment-group">
+                <div class="admin-item">
+                    <div>
+                        <strong>{{ group.name }}</strong>
+                        <small>{{ group.get_type_display }}</small>
+                    </div>
+                    <div class="admin-item-meta">
+                        {% if group.required_count %}<small>تعداد: {{ group.required_count }}</small>{% endif %}
+                        {% if group.required_credits %}<small>واحد: {{ group.required_credits }}</small>{% endif %}
+                        {% if group.overflow_to %}<small>overflow: {{ group.overflow_to.name }}</small>{% endif %}
+                    </div>
+                    <div class="admin-actions compact-actions">
+                        <a class="button secondary" href="{% url 'admin_group_edit' curriculum.id group.id %}">ویرایش</a>
+                        <a class="button secondary danger" href="{% url 'admin_group_delete' curriculum.id group.id %}">حذف</a>
+                    </div>
+                </div>
+
+                <div class="assignment-dropzone" data-group-id="{{ group.id }}">
+                    {% if group.requirement_courses.all %}
+                    <div class="assignment-list">
+                        {% for requirement_course in group.requirement_courses.all %}
+                        <div class="assignment-course" draggable="true" data-course-id="{{ requirement_course.curriculum_course.id }}">
+                            <div>
+                                <strong>{{ requirement_course.curriculum_course.course.code }}</strong>
+                                <small>{{ requirement_course.curriculum_course.course.name }}</small>
+                            </div>
+                            <div class="assignment-course-meta">
+                                <span>{{ requirement_course.curriculum_course.course.credits }} واحد</span>
+                                <span>{% if requirement_course.curriculum_course.is_mandatory %}اجباری{% else %}انتخابی{% endif %}</span>
+                            </div>
+                            <div class="admin-actions compact-actions">
+                                <a class="button secondary" href="{% url 'admin_course_edit' curriculum.id requirement_course.curriculum_course.id %}">ویرایش</a>
+                                <a class="button secondary danger" href="{% url 'admin_course_delete' curriculum.id requirement_course.curriculum_course.id %}">حذف</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="muted">هیچ درسی به این گروه اختصاص داده نشده است.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">هیچ گروه درسی تعریف نشده است.</p>
+        {% endif %}
+        <div class="quick-actions">
+            <a class="button primary" href="{% url 'admin_group_create' curriculum.id %}">+ ایجاد گروه درسی</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>دروس بدون گروه</h2>
+        <div class="assignment-dropzone unassigned-zone" data-group-id="">
+            {% if unassigned_courses %}
+            <div class="assignment-list">
+                {% for course in unassigned_courses %}
+                <div class="assignment-course" draggable="true" data-course-id="{{ course.id }}">
+                    <div>
+                        <strong>{{ course.course.code }}</strong>
+                        <small>{{ course.course.name }}</small>
+                    </div>
+                    <div class="assignment-course-meta">
+                        <span>{{ course.course.credits }} واحد</span>
+                        <span>{{ course.get_category_display }}</span>
+                    </div>
+                    <div class="admin-actions compact-actions">
+                        <a class="button secondary" href="{% url 'admin_course_edit' curriculum.id course.id %}">ویرایش</a>
+                        <a class="button secondary danger" href="{% url 'admin_course_delete' curriculum.id course.id %}">حذف</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted">همه‌ی دروس به گروه‌هایی اختصاص داده شده‌اند.</p>
+            {% endif %}
+        </div>
+
+        <div class="quick-actions">
+            <a class="button primary" href="{% url 'admin_course_create' curriculum.id %}">+ ایجاد درس</a>
+        </div>
+    </div>
+</section>
+
+<script>
+    (() => {
+        const dropzones = document.querySelectorAll('.assignment-dropzone');
+        const courseCards = document.querySelectorAll('.assignment-course');
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^|;)\\s*' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function attachDragEvents() {
+            courseCards.forEach((card) => {
+                card.addEventListener('dragstart', (event) => {
+                    event.dataTransfer.setData('text/plain', card.dataset.courseId);
+                    card.classList.add('dragging');
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    dropzones.forEach((zone) => zone.classList.remove('active'));
+                });
+            });
+
+            dropzones.forEach((zone) => {
+                zone.addEventListener('dragover', (event) => {
+                    event.preventDefault();
+                    zone.classList.add('active');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('active');
+                });
+
+                zone.addEventListener('drop', async (event) => {
+                    event.preventDefault();
+                    zone.classList.remove('active');
+
+                    const courseId = event.dataTransfer.getData('text/plain');
+                    if (!courseId) {
+                        return;
+                    }
+
+                    const groupId = zone.dataset.groupId || null;
+                    const response = await fetch(`{% url 'admin_assign_course_to_group' curriculum.id 0 %}`.replace('/0/', `/${courseId}/`), {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: JSON.stringify({ group_id: groupId }),
+                    });
+
+                    const payload = await response.json();
+                    if (payload.success) {
+                        window.location.reload();
+                    }
+                });
+            });
+        }
+
+        attachDragEvents();
+    })();
+</script>
+{% endblock %}

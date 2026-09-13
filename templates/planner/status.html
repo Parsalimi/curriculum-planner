@@ -48,6 +48,9 @@
         <div class="requirement-title">
             <div>
                 <h2>{{ item.group.name }}</h2>
+                {% if item.overflow_destination_name %}
+                <span class="pill neutral">overflow → {{ item.overflow_destination_name }}</span>
+                {% endif %}
             </div>
             <div class="requirement-result">
                 <strong>{{ item.completed_units }}</strong>
@@ -80,7 +83,10 @@
         <div class="accordion-content" id="group-{{ item.group.id }}" hidden>
             <div class="course-list">
                 {% for course in item.courses %}
-                <label class="course-toggle-row {% if course.passed %}is-passed{% endif %}">
+                <label class="course-toggle-row
+                    {% if course.passed %}is-passed{% endif %}
+                    {% if course.is_mandatory %}is-mandatory{% endif %}
+                ">
                     <input
                         type="checkbox"
                         data-course-id="{{ course.curriculum_course_id }}"

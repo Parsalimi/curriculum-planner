@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}چارت · برنامه‌ریزی دروس{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="eyebrow">چارت دروس</span>
+        <h1>{{ curriculum.name }}</h1>
+        <p class="muted">{{ curriculum.degree }} · {{ curriculum.version }}</p>
+    </div>
+</div>
+
+<div class="chart-wrapper">
+    <div id="chart-viewport" class="chart-viewport">
+        <div id="chart-surface" class="chart-surface">
+            <svg id="chart-svg" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+                {% for edge in edges %}
+                <path
+                    class="chart-edge"
+                    data-from="{{ edge.from }}"
+                    data-to="{{ edge.to }}">
+                </path>
+                {% endfor %}
+            </svg>
+            {% for node in nodes %}
+            <div
+                class="chart-node {% if node.passed %}is-passed{% endif %} {% if node.curriculum_course.is_mandatory %}is-mandatory{% endif %}"
+                data-course-id="{{ node.curriculum_course.id }}"
+                data-course-name="{{ node.curriculum_course.course.name }}"
+                data-course-code="{{ node.curriculum_course.course.code }}"
+                style="left: {{ node.x }}px; top: {{ node.y }}px;"
+            >
+                <div class="chart-node-header">
+                    <span class="course-code big">{{ node.curriculum_course.course.code }}</span>
+                    {% if node.curriculum_course.is_mandatory %}
+                    <span class="pill mandatory">Mandatory</span>
+                    {% endif %}
+                </div>
+                <strong>{{ node.curriculum_course.course.name }}</strong>
+                <small>{{ node.curriculum_course.course.credits }} واحد</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const viewport = document.getElementById('chart-viewport');
+        const surface = document.getElementById('chart-surface');
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let sourceOffsetX = 0;
+        let sourceOffsetY = 0;
+
+        function applyTransform() {
+            surface.style.transform = 'translate(' + offsetX + 'px, ' + offsetY + 'px) scale(' + scale + ')';
+        }
+
+        function updateEdges() {
+            const paths = document.querySelectorAll('.chart-edge');
+            paths.forEach((path) => {
+                const fromId = path.dataset.from;
+                const toId = path.dataset.to;
+                const fromNode = document.querySelector('[data-course-id="' + fromId + '"]');
+                const toNode = document.querySelector('[data-course-id="' + toId + '"]');
+
+                if (!fromNode || !toNode) {
+                    return;
+                }
+
+                const fromRect = fromNode.getBoundingClientRect();
+                const toRect = toNode.getBoundingClientRect();
+                const surfaceRect = surface.getBoundingClientRect();
+                const fromX = fromRect.left - surfaceRect.left + fromRect.width / 2;
+                const fromY = fromRect.top - surfaceRect.top + fromRect.height / 2;
+                const toX = toRect.left - surfaceRect.left + toRect.width / 2;
+                const toY = toRect.top - surfaceRect.top + toRect.height / 2;
+                path.setAttribute('d', 'M ' + fromX + ' ' + fromY + ' C ' + (fromX + 60) + ' ' + fromY + ', ' + (toX - 60) + ' ' + toY + ', ' + toX + ' ' + toY);
+            });
+        }
+
+        viewport.addEventListener('wheel', function (event) {
+            event.preventDefault();
+            const delta = event.deltaY < 0 ? 0.12 : -0.12;
+            scale = Math.min(1.6, Math.max(0.6, scale + delta));
+            applyTransform();
+            updateEdges();
+        }, { passive: false });
+
+        viewport.addEventListener('pointerdown', function (event) {
+            if (event.button !== 0 && event.button !== 1) return;
+            isDragging = true;
+            dragStartX = event.clientX;
+            dragStartY = event.clientY;
+            sourceOffsetX = offsetX;
+            sourceOffsetY = offsetY;
+            viewport.setPointerCapture(event.pointerId);
+        });
+
+        viewport.addEventListener('pointermove', function (event) {
+            if (!isDragging) return;
+            offsetX = sourceOffsetX + (event.clientX - dragStartX);
+            offsetY = sourceOffsetY + (event.clientY - dragStartY);
+            applyTransform();
+            updateEdges();
+        });
+
+        viewport.addEventListener('pointerup', function () {
+            isDragging = false;
+        });
+
+        document.querySelectorAll('.chart-node').forEach((node) => {
+            node.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+                const courseId = Number(node.dataset.courseId);
+                const originalPassed = node.classList.contains('is-passed');
+
+                fetch('{% url "toggle_course_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        curriculum_course_id: courseId,
+                        passed: true
+                    })
+                })
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'failed');
+                    }
+                    node.classList.add('is-passed');
+                    node.classList.remove('is-optional');
+                    const courseName = node.dataset.courseName || 'Course';
+                    const toast = document.getElementById('status-toast');
+                    if (toast) {
+                        toast.textContent = courseName + ' به‌عنوان گذرانده ثبت شد.';
+                        toast.classList.add('visible');
+                        clearTimeout(window.chartToastTimer);
+                        window.chartToastTimer = setTimeout(() => toast.classList.remove('visible'), 2200);
+                    }
+                })
+                .catch(() => {
+                    node.classList.toggle('is-passed', originalPassed);
+                });
+            });
+        });
+
+        applyTransform();
+        updateEdges();
+    })();
+</script>
+{% endblock %}
