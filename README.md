@@ -39,7 +39,6 @@ pip install -r requirements.txt
 
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py seed_cs_curriculum
 python manage.py runserver
 ```
 
@@ -52,7 +51,7 @@ Admin: http://127.0.0.1:8000/admin/
 After migrations:
 
 ```bash
-python manage.py seed_demo
+python manage.py seed_cs_curriculum
 ```
 
 This creates a demo Computer Science curriculum and courses. It does not create a user.
