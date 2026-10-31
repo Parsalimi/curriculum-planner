@@ -110,14 +110,18 @@ def _get_curriculum_stats(request, curriculum):
 
     requirement_courses_by_group = {}
     passed_courses_by_group = {}
-    own_completed_by_group = {}
+    own_completed_by_group = {} # id: Sum of each requirement group
     required_units_by_group = {}
     mandatory_passed_by_group = {}
     groups_payload = []
     completed_groups = 0
 
     for group in groups:
+        # print(type(group)) # <class 'planner.models.RequirementGroup'>
+        # print(type(group.requirement_courses.all())) # <class 'django.db.models.query.QuerySet'>
+        # group.requirement_courses.all() is a Django Model QuerySet <QuerySet [...]>
         requirement_courses = list(group.requirement_courses.all())
+        # print(type(requirement_courses[0])) # < ... > - <class 'planner.models.RequirementCourse'>
         requirement_courses_by_group[group.id] = requirement_courses
 
         passed_courses = []
@@ -161,7 +165,6 @@ def _get_curriculum_stats(request, curriculum):
             overflow_sources_by_destination[group.overflow_to_id].append(group)
 
     completed_units_by_group = {}
-
     def resolve_group_completed(group_id):
         if group_id in completed_units_by_group:
             return completed_units_by_group[group_id]
@@ -169,6 +172,7 @@ def _get_curriculum_stats(request, curriculum):
         own_completed = own_completed_by_group.get(group_id, 0)
         extra_from_sources = 0
 
+        
         for source_group in overflow_sources_by_destination.get(group_id, []):
             source_total = resolve_group_completed(source_group.id)
             source_required = required_units_by_group.get(source_group.id, 0)

@@ -25,7 +25,7 @@ class Command(BaseCommand):
             version="1400",
             defaults={
                 "degree": "BSc",
-                "minimum_credits": 139,
+                "minimum_credits": 142,
             },
         )
 
@@ -206,12 +206,12 @@ class Command(BaseCommand):
         general_group = RequirementGroup.objects.update_or_create(
             curriculum=curriculum,
             name="دروس عمومی",
-            defaults={"type": "CHOOSE_CREDITS", "required_count": 6,
-                      "required_credits": 8},
+            defaults={"type": "CHOOSE_CREDITS", "required_count": 7,
+                      "required_credits": 10},
         )[0]
         general = [ # mandatory
                     ("GEN-FA", "زبان فارسی", 3, "GENERAL", 1),
-                    # ("GEN-EN-PRE", "زبان انگلیسی پیش دانشگاهی-ترکیبی", 2, "GENERAL", 1),
+                    ("GEN-EN-PRE", "زبان انگلیسی پیش دانشگاهی-ترکیبی", 2, "GENERAL", 1),
                     ("GEN-EN-1", "زبان انگلیسی عمومی-ترکیبی (1)", 1, "GENERAL", 1),
                     ("GEN-EN-2", "زبان انگلیسی عمومی-ترکیبی (2)", 1, "GENERAL", 2),
                     ("GEN-EN-3", "زبان انگلیسی عمومی-ترکیبی (3)", 1, "GENERAL", 3),
@@ -335,6 +335,26 @@ class Command(BaseCommand):
             _, cc = add_course(code, name, cr, "GENERAL", sem, mandatory=True)
             RequirementCourse.objects.get_or_create(
                 curriculum_course=cc, requirement_group=box6
+            )
+
+        # ------------------------------------------------------------------
+        # x) MASTER ELECTIVE COURSES
+        # ------------------------------------------------------------------
+        master_elective_group = RequirementGroup.objects.update_or_create(
+            curriculum=curriculum,
+            name="دروس ارشد",
+            defaults={"type": "CHOOSE_CREDITS", "required_count": None,
+                      "required_credits": None},
+        )[0]
+
+        master = [
+            ("2970153575", "نظریه بازی ها", 3),
+        ]
+        for code, name, cr in master:
+            _, cc = add_course(code, name, cr, "ELECTIVE", 8,
+                               mandatory=False)
+            RequirementCourse.objects.get_or_create(
+                curriculum_course=cc, requirement_group=master_elective_group
             )
         # ------------------------------------------------------------------
         # 8) PREREQUISITES (sample — extend as needed)
